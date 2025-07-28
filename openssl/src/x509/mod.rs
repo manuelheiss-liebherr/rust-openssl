@@ -1258,6 +1258,18 @@ impl X509NameRef {
         unsafe { cvt_p(ffi::X509_NAME_dup(self.as_ptr())).map(|n| X509Name::from_ptr(n)) }
     }
 
+    /// Prints the `X509Name` in one line.
+    #[corresponds(X509_NAME_oneline)]
+    #[cfg(any(boringssl, ossl110, libressl270, awslc))]
+    pub fn to_string(&self) -> String {
+        const BUF_LEN: usize = 1024;
+        let mut buf = vec![0i8; BUF_LEN];
+        unsafe { 
+            let _ = ffi::X509_NAME_oneline(self.as_ptr(), buf.as_mut_ptr() as *mut _, BUF_LEN as c_int);
+            CStr::from_ptr(buf.as_mut_ptr() as *const _).to_string_lossy().into_owned()
+        }
+    }
+
     to_der! {
         /// Serializes the certificate into a DER-encoded X509 name structure.
         ///

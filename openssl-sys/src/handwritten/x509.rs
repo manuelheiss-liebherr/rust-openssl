@@ -286,6 +286,7 @@ extern "C" {
     pub fn X509_NAME_new() -> *mut X509_NAME;
     pub fn X509_NAME_cmp(x: *const X509_NAME, y: *const X509_NAME) -> c_int;
     pub fn X509_NAME_free(x: *mut X509_NAME);
+    pub fn X509_NAME_oneline(x: *const X509_NAME, buf: *mut c_char, len: c_int) -> *mut c_char;
 
     pub fn X509_new() -> *mut X509;
     pub fn X509_free(x: *mut X509);
