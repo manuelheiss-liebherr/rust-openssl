@@ -10,7 +10,7 @@ use crate::{
     cvt, cvt_p,
     error::ErrorStack,
     pkey::{PKey, Private, Public},
-    ui::UiMethod,
+    ui::UiMethod, x509::X509,
 };
 
 fn engine_free(ptr: *mut ffi::ENGINE) {
@@ -154,4 +154,40 @@ impl Engine {
 
         res
     }
+
+    /// Loads a X509 certificate
+    #[corresponds(ENGINE_ctrl_cmd)]
+    pub fn load_certificate(
+        &mut self,
+        url: &str,
+    ) -> Result<X509, ErrorStack> {
+        let url = CString::new(url).unwrap();
+        let cmd = CString::new("LOAD_CERT_CTRL").unwrap();
+        let mut param = LoadCertCtrlParam {
+            cert_id: url.as_ptr(),
+            cert: null_mut()
+        };
+
+        let cert = unsafe {
+            cvt(ffi::ENGINE_ctrl_cmd(
+                self.as_ptr(),
+                cmd.as_ptr(),
+                0,
+                &mut param as *mut _ as *mut c_void,
+                None,
+                1,
+            ))?;
+            crate::x509::X509::from_ptr(param.cert)
+        };
+        Ok(cert)
+    }
 }
+
+
+#[repr(C)]
+struct LoadCertCtrlParam {
+    cert_id: *const std::ffi::c_char,
+    cert: *mut ffi::X509,
+}
+
+
